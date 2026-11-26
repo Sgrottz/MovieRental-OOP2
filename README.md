@@ -45,7 +45,7 @@ locadora.properties      configuração
 
 ## Regras de negócio
 - Máximo de 3 locações em aberto por cliente; cliente com locação atrasada não aluga.
-- _Mesmo filme não pode ser alugado duas vezes simultaneamente pelo mesmo cliente.
+- Mesmo filme não pode ser alugado duas vezes simultaneamente pelo mesmo cliente.
 - Filme sem cópia disponível não pode ser alugado._
 - Multa = dias de atraso × multa diária do tipo (Lançamento R$ 4,00; Catálogo R$ 2,00).
 - Não exclui cliente com locação em aberto, nem filme com histórico de locações.
