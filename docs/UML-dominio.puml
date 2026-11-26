@@ -1,0 +1,125 @@
+@startuml UML-dominio
+title Locadora de Filmes - Pacote domain
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+hide empty members
+left to right direction
+
+class Locadora <<aggregate root>> {
+  - clientes : ArrayList<Cliente>
+  - filmes : ArrayList<Filme>
+  - proximoIdCliente : int
+  - proximoIdFilme : int
+  + cadastrarCliente(nome, cpf, telefone) : Cliente
+  + atualizarCliente(id, nome, cpf, telefone) : void
+  + excluirCliente(id) : void
+  + buscarCliente(id) : Cliente
+  + listarClientes() : List<Cliente>
+  + cadastrarFilme(tipo, titulo, ano, copias) : Filme
+  + atualizarFilme(id, titulo, ano, copias) : void
+  + excluirFilme(id) : void
+  + buscarFilme(id) : Filme
+  + listarFilmes() : List<Filme>
+  + alugar(clienteId, filmeId, data) : Locacao
+  + devolver(clienteId, filmeId, data) : Locacao
+  + restaurarCliente(cliente) : void
+  + restaurarFilme(filme) : void
+}
+
+class Cliente {
+  + {static} MAX_LOCACOES_ABERTAS : int = 3
+  - id : int
+  - nome : String
+  - cpf : String
+  - telefone : String
+  - locacoes : ArrayList<Locacao>
+  + atualizar(nome, cpf, telefone) : void
+  ~ alugar(filme, data) : Locacao
+  ~ devolver(filme, data) : Locacao
+  + locacoesEmAberto() : List<Locacao>
+  + temLocacaoAtrasada(hoje) : boolean
+  + totalMultasPendentes(ref) : double
+  + adicionarLocacaoRestaurada(locacao) : void
+  + getLocacoes() : List<Locacao>
+}
+
+class Locacao {
+  - filme : Filme
+  - retirada : LocalDate
+  - prevista : LocalDate
+  - devolucao : LocalDate
+  + emAberto() : boolean
+  + estaAtrasada(hoje) : boolean
+  + diasAtraso(ref) : int
+  + calcularMulta(ref) : double
+  + calcularTotal(ref) : double
+  ~ registrarDevolucao(data) : void
+}
+
+abstract class Filme {
+  - id : int
+  - titulo : String
+  - ano : int
+  - copiasTotais : int
+  - copiasDisponiveis : int
+  + {abstract} tipo() : TipoFilme
+  + {abstract} valorDiaria() : double
+  + {abstract} prazoDias() : int
+  + {abstract} multaPorDiaAtraso() : double
+  + estaDisponivel() : boolean
+  + copiasAlugadas() : int
+  + atualizar(titulo, ano, copiasTotais) : void
+  ~ retirarCopia() : void
+  ~ devolverCopia() : void
+}
+
+class FilmeLancamento {
+  + valorDiaria() : double  // R$ 8,00
+  + prazoDias() : int  // 2 dias
+  + multaPorDiaAtraso() : double  // R$ 4,00
+}
+
+class FilmeCatalogo {
+  + valorDiaria() : double  // R$ 4,00
+  + prazoDias() : int  // 5 dias
+  + multaPorDiaAtraso() : double  // R$ 2,00
+}
+
+enum TipoFilme {
+  LANCAMENTO
+  CATALOGO
+  + criar(id, titulo, ano, total, disp) : Filme
+}
+
+class Validador <<static>> {
+  - Validador()
+  + {static} textoObrigatorio(valor, campo) : String
+  + {static} inteiroEntre(valor, min, max, campo) : int
+  + {static} cpf(valor) : String
+}
+
+class RegraNegocioException <<exception>>
+class RuntimeException
+
+interface Serializable <<java.io>>
+
+Locadora "1" *-- "0..*" Cliente : clientes
+Locadora "1" *-- "0..*" Filme : filmes
+Cliente "1" *-- "0..*" Locacao : locacoes
+Locacao "0..*" --> "1" Filme : filme
+
+Filme <|-- FilmeLancamento
+Filme <|-- FilmeCatalogo
+TipoFilme ..> Filme : cria
+Filme ..> TipoFilme : tipo()
+
+Cliente ..> Validador
+Filme ..> Validador
+Locadora ..> RegraNegocioException : lança
+RuntimeException <|-- RegraNegocioException
+
+Serializable <|.. Locadora
+Serializable <|.. Cliente
+Serializable <|.. Locacao
+Serializable <|.. Filme
+@enduml

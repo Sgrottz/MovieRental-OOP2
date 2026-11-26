@@ -1,0 +1,150 @@
+@startuml UML-arquitetura
+title Locadora de Filmes - Camadas e Abstract Factory
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam packageStyle rectangle
+hide empty members
+
+class Main {
+  + {static} main(args) : void
+}
+
+package "locadora.presentation" {
+  interface Tela {
+    + exibir() : void
+  }
+
+  interface FabricaInterface <<Abstract Factory>> {
+    + criarMenuPrincipal(servico) : Tela
+    + criarTelaCliente(servico) : Tela
+    + criarTelaFilme(servico) : Tela
+    + criarTelaLocacao(servico) : Tela
+    + {static} daConfiguracao(configuracao) : FabricaInterface
+  }
+
+  class Formatacao <<static>> {
+    + {static} data(d) : String
+    + {static} moeda(v) : String
+    + {static} interpretarData(texto) : LocalDate
+  }
+
+  package "locadora.presentation.textual" {
+    class FabricaTextual
+    class MenuPrincipalTextual
+    class TelaClienteTextual
+    class TelaFilmeTextual
+    class TelaLocacaoTextual
+    class Console <<static>>
+  }
+
+  package "locadora.presentation.gui" {
+    class FabricaGui
+    class MenuPrincipalGui
+    class TelaClienteGui
+    class TelaFilmeGui
+    class TelaLocacaoGui
+    class Gui <<static>>
+  }
+}
+
+package "locadora.application" {
+  class ServicoLocadora {
+    - repositorio : RepositorioLocadora
+    - locadora : Locadora
+    + cadastrarCliente(nome, cpf, telefone) : Cliente
+    + atualizarCliente(...) : void
+    + excluirCliente(id) : void
+    + listarClientes() : List<Cliente>
+    + cadastrarFilme(tipo, titulo, ano, copias) : Filme
+    + atualizarFilme(...) : void
+    + excluirFilme(id) : void
+    + listarFilmes() : List<Filme>
+    + alugar(clienteId, filmeId, data) : Locacao
+    + devolver(clienteId, filmeId, data) : Locacao
+    + salvar() : void
+    + carregar() : void
+  }
+
+  interface RepositorioLocadora {
+    + salvar(locadora) : void
+    + carregar() : Locadora
+  }
+
+  class Configuracao <<singleton>> {
+    - {static} INSTANCIA : Configuracao
+    - Configuracao()
+    + {static} getInstancia() : Configuracao
+    + tipoInterface() : String
+    + formatoArquivo() : String
+    + caminhoArquivo() : String
+  }
+
+  class PersistenciaException <<exception>>
+}
+
+package "locadora.infrastructure" {
+  class RepositorioSerializado {
+    - arquivo : Path
+  }
+  class RepositorioCsv {
+    - arquivo : Path
+  }
+  class FabricaRepositorio <<static>> {
+    + {static} criar(configuracao) : RepositorioLocadora
+  }
+}
+
+package "locadora.domain" {
+  class Locadora <<aggregate root>>
+}
+
+' ---------- Main ----------
+Main ..> Configuracao
+Main ..> FabricaRepositorio
+Main ..> FabricaInterface
+Main ..> ServicoLocadora
+
+' ---------- Abstract Factory ----------
+FabricaInterface <|.. FabricaTextual
+FabricaInterface <|.. FabricaGui
+
+Tela <|.. MenuPrincipalTextual
+Tela <|.. TelaClienteTextual
+Tela <|.. TelaFilmeTextual
+Tela <|.. TelaLocacaoTextual
+Tela <|.. MenuPrincipalGui
+Tela <|.. TelaClienteGui
+Tela <|.. TelaFilmeGui
+Tela <|.. TelaLocacaoGui
+
+FabricaTextual ..> MenuPrincipalTextual : cria
+FabricaTextual ..> TelaClienteTextual : cria
+FabricaTextual ..> TelaFilmeTextual : cria
+FabricaTextual ..> TelaLocacaoTextual : cria
+FabricaGui ..> MenuPrincipalGui : cria
+FabricaGui ..> TelaClienteGui : cria
+FabricaGui ..> TelaFilmeGui : cria
+FabricaGui ..> TelaLocacaoGui : cria
+
+MenuPrincipalTextual --> FabricaInterface
+MenuPrincipalGui --> FabricaInterface
+
+TelaClienteTextual --> ServicoLocadora
+TelaFilmeTextual --> ServicoLocadora
+TelaLocacaoTextual --> ServicoLocadora
+TelaClienteGui --> ServicoLocadora
+TelaFilmeGui --> ServicoLocadora
+TelaLocacaoGui --> ServicoLocadora
+
+' ---------- Persistência ----------
+ServicoLocadora --> RepositorioLocadora
+ServicoLocadora --> Locadora
+RepositorioLocadora <|.. RepositorioSerializado
+RepositorioLocadora <|.. RepositorioCsv
+FabricaRepositorio ..> RepositorioSerializado : cria
+FabricaRepositorio ..> RepositorioCsv : cria
+RepositorioSerializado ..> PersistenciaException
+RepositorioCsv ..> PersistenciaException
+FabricaInterface ..> Configuracao
+FabricaRepositorio ..> Configuracao
+@enduml
