@@ -1,0 +1,113 @@
+classDiagram
+    direction TB
+
+    class Locadora {
+        <<aggregate root>>
+        -ArrayList~Cliente~ clientes
+        -ArrayList~Filme~ filmes
+        -int proximoIdCliente
+        -int proximoIdFilme
+        +cadastrarCliente(nome, cpf, telefone) Cliente
+        +atualizarCliente(id, nome, cpf, telefone) void
+        +excluirCliente(id) void
+        +buscarCliente(id) Cliente
+        +listarClientes() List~Cliente~
+        +cadastrarFilme(tipo, titulo, ano, copias) Filme
+        +atualizarFilme(id, titulo, ano, copias) void
+        +excluirFilme(id) void
+        +buscarFilme(id) Filme
+        +listarFilmes() List~Filme~
+        +alugar(clienteId, filmeId, data) Locacao
+        +devolver(clienteId, filmeId, data) Locacao
+        +restaurarCliente(cliente) void
+        +restaurarFilme(filme) void
+    }
+
+    class Cliente {
+        -int id
+        -String nome
+        -String cpf
+        -String telefone
+        -ArrayList~Locacao~ locacoes
+        +MAX_LOCACOES_ABERTAS int
+        +atualizar(nome, cpf, telefone) void
+        ~alugar(filme, data) Locacao
+        ~devolver(filme, data) Locacao
+        +locacoesEmAberto() List~Locacao~
+        +temLocacaoAtrasada(hoje) boolean
+        +totalMultasPendentes(ref) double
+        +adicionarLocacaoRestaurada(locacao) void
+    }
+
+    class Locacao {
+        -Filme filme
+        -LocalDate retirada
+        -LocalDate prevista
+        -LocalDate devolucao
+        +emAberto() boolean
+        +estaAtrasada(hoje) boolean
+        +diasAtraso(ref) int
+        +calcularMulta(ref) double
+        +calcularTotal(ref) double
+        ~registrarDevolucao(data) void
+    }
+
+    class Filme {
+        <<abstract>>
+        -int id
+        -String titulo
+        -int ano
+        -int copiasTotais
+        -int copiasDisponiveis
+        +tipo()* TipoFilme
+        +valorDiaria()* double
+        +prazoDias()* int
+        +multaPorDiaAtraso()* double
+        +estaDisponivel() boolean
+        +copiasAlugadas() int
+        +atualizar(titulo, ano, copiasTotais) void
+        ~retirarCopia() void
+        ~devolverCopia() void
+    }
+
+    class FilmeLancamento {
+        +valorDiaria() double  "R$ 8,00"
+        +prazoDias() int  "2 dias"
+        +multaPorDiaAtraso() double  "R$ 4,00"
+    }
+
+    class FilmeCatalogo {
+        +valorDiaria() double  "R$ 4,00"
+        +prazoDias() int  "5 dias"
+        +multaPorDiaAtraso() double  "R$ 2,00"
+    }
+
+    class TipoFilme {
+        <<enumeration>>
+        LANCAMENTO
+        CATALOGO
+        +criar(id, titulo, ano, total, disp) Filme
+    }
+
+    class Validador {
+        <<static>>
+        +textoObrigatorio(valor, campo)$ String
+        +inteiroEntre(valor, min, max, campo)$ int
+        +cpf(valor)$ String
+    }
+
+    class RegraNegocioException {
+        <<exception>>
+    }
+
+    Locadora "1" *-- "0..*" Cliente : clientes
+    Locadora "1" *-- "0..*" Filme : filmes
+    Cliente "1" *-- "0..*" Locacao : locacoes
+    Locacao "0..*" --> "1" Filme : filme
+    Filme <|-- FilmeLancamento
+    Filme <|-- FilmeCatalogo
+    TipoFilme ..> Filme : cria
+    Filme ..> TipoFilme : tipo()
+    Cliente ..> Validador
+    Filme ..> Validador
+    Locadora ..> RegraNegocioException : lança

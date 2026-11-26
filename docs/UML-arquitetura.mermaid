@@ -1,0 +1,133 @@
+classDiagram
+    direction TB
+
+    class Main {
+        +main(args)$ void
+    }
+
+    %% ---------- application ----------
+    class ServicoLocadora {
+        <<application>>
+        -RepositorioLocadora repositorio
+        -Locadora locadora
+        +cadastrarCliente(...) Cliente
+        +cadastrarFilme(...) Filme
+        +alugar(clienteId, filmeId, data) Locacao
+        +devolver(clienteId, filmeId, data) Locacao
+        +salvar() void
+        +carregar() void
+    }
+
+    class RepositorioLocadora {
+        <<interface>>
+        +salvar(locadora) void
+        +carregar() Locadora
+    }
+
+    class Configuracao {
+        <<singleton>>
+        -Configuracao INSTANCIA$
+        +getInstancia()$ Configuracao
+        +tipoInterface() String
+        +formatoArquivo() String
+        +caminhoArquivo() String
+    }
+
+    class PersistenciaException {
+        <<exception>>
+    }
+
+    %% ---------- infrastructure ----------
+    class RepositorioSerializado {
+        -Path arquivo
+    }
+    class RepositorioCsv {
+        -Path arquivo
+    }
+    class FabricaRepositorio {
+        <<static>>
+        +criar(configuracao)$ RepositorioLocadora
+    }
+
+    %% ---------- presentation ----------
+    class Tela {
+        <<interface>>
+        +exibir() void
+    }
+
+    class FabricaInterface {
+        <<interface - Abstract Factory>>
+        +criarMenuPrincipal(servico) Tela
+        +criarTelaCliente(servico) Tela
+        +criarTelaFilme(servico) Tela
+        +criarTelaLocacao(servico) Tela
+        +daConfiguracao(configuracao)$ FabricaInterface
+    }
+
+    class FabricaTextual
+    class FabricaGui
+
+    class MenuPrincipalTextual
+    class TelaClienteTextual
+    class TelaFilmeTextual
+    class TelaLocacaoTextual
+    class MenuPrincipalGui
+    class TelaClienteGui
+    class TelaFilmeGui
+    class TelaLocacaoGui
+
+    class Formatacao {
+        <<static>>
+        +data(d)$ String
+        +moeda(v)$ String
+        +interpretarData(texto)$ LocalDate
+    }
+
+    class Locadora {
+        <<domain>>
+    }
+
+    %% ---------- relações ----------
+    Main ..> Configuracao
+    Main ..> FabricaRepositorio
+    Main ..> FabricaInterface
+    Main ..> ServicoLocadora
+
+    ServicoLocadora --> RepositorioLocadora
+    ServicoLocadora --> Locadora
+    RepositorioLocadora <|.. RepositorioSerializado
+    RepositorioLocadora <|.. RepositorioCsv
+    FabricaRepositorio ..> RepositorioSerializado : cria
+    FabricaRepositorio ..> RepositorioCsv : cria
+    RepositorioSerializado ..> PersistenciaException
+    RepositorioCsv ..> PersistenciaException
+
+    FabricaInterface <|.. FabricaTextual
+    FabricaInterface <|.. FabricaGui
+
+    Tela <|.. MenuPrincipalTextual
+    Tela <|.. TelaClienteTextual
+    Tela <|.. TelaFilmeTextual
+    Tela <|.. TelaLocacaoTextual
+    Tela <|.. MenuPrincipalGui
+    Tela <|.. TelaClienteGui
+    Tela <|.. TelaFilmeGui
+    Tela <|.. TelaLocacaoGui
+
+    FabricaTextual ..> MenuPrincipalTextual : cria
+    FabricaTextual ..> TelaClienteTextual : cria
+    FabricaTextual ..> TelaFilmeTextual : cria
+    FabricaTextual ..> TelaLocacaoTextual : cria
+    FabricaGui ..> MenuPrincipalGui : cria
+    FabricaGui ..> TelaClienteGui : cria
+    FabricaGui ..> TelaFilmeGui : cria
+    FabricaGui ..> TelaLocacaoGui : cria
+
+    MenuPrincipalTextual --> FabricaInterface
+    MenuPrincipalGui --> FabricaInterface
+    TelaClienteTextual --> ServicoLocadora
+    TelaFilmeTextual --> ServicoLocadora
+    TelaLocacaoTextual --> ServicoLocadora
+    TelaClienteGui --> ServicoLocadora
+    TelaFilmeGui --> ServicoLocadora
+    TelaLocacaoGui --> ServicoLocadora
